@@ -1,8 +1,14 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+
+	_ "github.com/lib/pq"
 )
 
 type User struct {
@@ -14,10 +20,13 @@ type User struct {
 
 type APIServer struct {
 	addr string
+	db   *sql.DB
 }
 
-func NewAPIServer(addr string) *APIServer {
-	return &APIServer{addr: addr}
+// var db *sql.DB
+
+func NewAPIServer(addr string, db *sql.DB) *APIServer {
+	return &APIServer{addr: addr, db: db}
 
 }
 
@@ -29,6 +38,25 @@ func (s *APIServer) Run() error {
 		userId := r.PathValue("userId")
 
 		w.Write([]byte("user id is " + userId))
+	})
+
+	// create the post
+
+	router.HandleFunc("POST /user", func(w http.ResponseWriter, r *http.Request) {
+
+		var userData User
+
+		body, err := io.ReadAll(r.Body) // instead of reading all encoder can be the good choice
+		if err != nil {
+			log.Fatal("error while reading the body", err)
+		}
+
+		err = json.Unmarshal(body, &userData)
+		if err != nil {
+			log.Fatal("erorr while parsing the body", err)
+		}
+		s.db.Exec("INSERT INTO users (name, age, password, roles) VALUES ($1, $2, $3, $4) returning *", userData.Name, userData.Age, userData.Password, userData.Permissions)
+		fmt.Println("user data is ", userData)
 	})
 	server := http.Server{
 		Addr: s.addr,

@@ -25,7 +25,16 @@ func main() {
 	}
 	fmt.Println("the struct data is ", person, user)
 
-	server := NewAPIServer(":8080")
+	db, err := InitializeDD("localhost", "5432", "postgres", "nabin", "godb")
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	defer db.Close()
+
+	server := NewAPIServer(":8080", db)
 
 	server.Run()
 
