@@ -1,0 +1,21 @@
+{
+  "name": "extra-concepts",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/express": "^4.17.21"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "socket.io": "^4.7.5",
+    "ws": "^8.17.0"
+  }
+}

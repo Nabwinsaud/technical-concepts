@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web socket with simple -websocket native examples</title>
+  </head>
+  <body>
+    <p>Join the rooms</p>
+    <input
+      placeholder="Join Room"
+      type="text"
+      name="room"
+      id="room"
+      style="margin: 10px 0"
+    />
+    <div>
+      <input type="button" value="Join Using Room" onclick="joinRoom()" />
+    </div>
+    <br />
+    <form id="input-form" style="display: none">
+      <input type="text" id="message" name="message" /> <br /><br />
+      <input type="submit" value="Send" />
+    </form>
+    <h1>Let chat something crazy people...</h1>
+    <div id="messages"></div>
+    <script>
+      const joinMessage = {
+        type: "join",
+        room: "general",
+      };
+      const sendMessage = {
+        type: "message",
+        room: "general",
+      };
+      const inputForm = document.getElementById("input-form");
+      const roomName = document.getElementById("room");
+      const messages = document.getElementById("messages");
+      const message = document.getElementById("message");
+      const websocket = new WebSocket("ws://localhost:8080");
+
+      /**
+      @param {MessageEvent} event
+      */
+      websocket.onmessage = (event) => {
+        /*
+         * The event object contains the data sent by the server
+         data is {type: "message", text: "Hello world",room: "general"}
+         */
+
+        console.log("event sis", event, event.origin);
+        console.log("event data", event.data);
+        const data = JSON.parse(event.data);
+        if (data.type === "message") {
+          messages.innerHTML += ` <p>Message :${data.text}</p>`;
+        }
+
+        websocket.addEventListener("open", (socket, ev) => {
+          console.log("connected successfully", socket, ev);
+        });
+      };
+
+      /**
+
+            * Join the room
+            * @param {String} room
+            * @param {"join" | "leave" | "message"} type 
+      
+      */
+      const joinRoom = (room) => {
+        const roomInput = roomName.value;
+        if (roomInput.trim() !== "") {
+          joinMessage.room = roomInput;
+          inputForm.style.display = "block";
+          websocket.send(JSON.stringify(joinMessage));
+        }
+      };
+      /**
+         * Send message to the server
+         * @param {Event} event
+
+      */
+      const handleMessage = (event) => {
+        event.preventDefault();
+        sendMessage.text = message.value;
+        sendMessage.room = roomName.value;
+        websocket.send(JSON.stringify(sendMessage));
+        document.getElementById("message").value = "";
+      };
+      document
+        .getElementById("input-form")
+        .addEventListener("submit", handleMessage);
+    </script>
+  </body>
+</html>
