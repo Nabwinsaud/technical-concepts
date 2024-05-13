@@ -24,17 +24,42 @@ func NewAPIServer(addr string) *APIServer {
 func (s *APIServer) Run() error {
 	router := http.NewServeMux()
 
-	router.HandleFunc("/user/{userId}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("GET /user/{userId}", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("post user data is", r.Body)
 		userId := r.PathValue("userId")
-		w.Write([]byte("user id is:  " + userId))
+
+		w.Write([]byte("user id is " + userId))
 	})
 	server := http.Server{
-		Addr:    s.addr,
-		Handler: router,
+		Addr: s.addr,
+		// Handler: router,
+		// Handler: RequestLoggerMiddleware(router),
+		Handler: AuthMiddleWare(RequestLoggerMiddleware((router))),
 	}
 
 	log.Println("server running on port 8080")
 	return server.ListenAndServe()
 
+}
+
+func RequestLoggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("request is ", r.URL.Path)
+		log.Printf("method is %s,path is %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func AuthMiddleWare(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		token := r.Header.Get("Authorization")
+
+		if token != "Bearer token" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		log.Printf("auth middleware is called ....")
+		next.ServeHTTP(w, r)
+	})
 }
