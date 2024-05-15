@@ -7,7 +7,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -37,7 +39,31 @@ func (s *APIServer) Run() error {
 		log.Println("post user data is", r.Body)
 		userId := r.PathValue("userId")
 
-		w.Write([]byte("user id is " + userId))
+		row := s.db.QueryRow("SELECT name,password,roles,age FROM users WHERE id=$1", userId)
+
+		// if err != nil {
+		// 	http.Error(w, "error while fetching the data", http.StatusInternalServerError)
+		// 	log.Fatal("error while fetching the data", err)
+		// 	return
+		// }
+
+		var user User
+		// err := row.Scan(&user.Name, &user.Password, &user.Permissions, &user.Age)
+		err := row.Scan(&user.Name, &user.Password, pq.Array(&user.Permissions), &user.Age)
+
+		if err != nil {
+			http.Error(w, "error while scanning the data", http.StatusInternalServerError)
+			log.Fatal("error while scanning the data", err)
+			return
+		}
+		userData, err := json.Marshal(user)
+		if err != nil {
+			http.Error(w, "error while marshalling the data", http.StatusInternalServerError)
+			log.Fatal("error while marshalling the data", err)
+			return
+		}
+		w.Write(userData)
+		// w.Write([]byte("user id is " + userId))
 	})
 
 	// create the post
@@ -46,6 +72,12 @@ func (s *APIServer) Run() error {
 
 		var userData User
 
+		// decoder := json.NewDecoder(r.Body)
+		// if err := decoder.Decode(&userData); err != nil {
+		// 	http.Error(w, "Error reading request body", http.StatusBadRequest)
+		// 	log.Fatal("error while decoding the body", err)
+		// 	return
+		// }
 		body, err := io.ReadAll(r.Body) // instead of reading all encoder can be the good choice
 		if err != nil {
 			log.Fatal("error while reading the body", err)
@@ -55,7 +87,13 @@ func (s *APIServer) Run() error {
 		if err != nil {
 			log.Fatal("erorr while parsing the body", err)
 		}
-		s.db.Exec("INSERT INTO users (name, age, password, roles) VALUES ($1, $2, $3, $4) returning *", userData.Name, userData.Age, userData.Password, userData.Permissions)
+		rolesString := "{" + strings.Join(userData.Permissions, ",") + "}"
+		_, err = s.db.Exec("INSERT INTO users (name, age, password, roles) VALUES ($1, $2, $3, $4) ", userData.Name, userData.Age, userData.Password, rolesString)
+		if err != nil {
+			http.Error(w, "error while inserting the data", http.StatusInternalServerError)
+			log.Fatal("error while inserting the data", err)
+			return
+		}
 		fmt.Println("user data is ", userData)
 	})
 	server := http.Server{
