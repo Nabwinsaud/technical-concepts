@@ -85,7 +85,7 @@ func (s *APIServer) Run() error {
 
 		err = json.Unmarshal(body, &userData)
 		if err != nil {
-			log.Fatal("erorr while parsing the body", err)
+			log.Fatal("error while parsing the body", err)
 		}
 		rolesString := "{" + strings.Join(userData.Permissions, ",") + "}"
 		_, err = s.db.Exec("INSERT INTO users (name, age, password, roles) VALUES ($1, $2, $3, $4) ", userData.Name, userData.Age, userData.Password, rolesString)
@@ -95,6 +95,39 @@ func (s *APIServer) Run() error {
 			return
 		}
 		fmt.Println("user data is ", userData)
+	})
+
+	router.HandleFunc("PUT /user/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		var userData User
+
+		body := json.NewDecoder(r.Body)
+
+		if err := body.Decode(&userData); err != nil {
+			fmt.Println("error while decoding the body", err)
+			http.Error(w, "error parsing the json body", http.StatusBadRequest)
+		}
+
+		_, err := s.db.Exec("UPDATE users SET name=$1,age=$2,roles=$3 where id=$4", userData.Name, userData.Age, pq.Array(userData.Permissions), r.PathValue("userId"))
+
+		if err != nil {
+			fmt.Println("error while updating the data", err)
+			http.Error(w, "error while updating the data", http.StatusInternalServerError)
+			return
+		}
+
+		// return the success message with json
+		w.Write([]byte("user data is updated successfully"))
+
+	})
+
+	router.HandleFunc("DELETE /user/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		_, err := s.db.Exec("DELETE FROM users WHERE id=$1", r.PathValue("userId"))
+
+		if err != nil {
+			fmt.Println("error while deleting the data", err)
+			http.Error(w, "error while deleting user ", http.StatusInternalServerError)
+		}
+		w.Write([]byte("user deleted successfully"))
 	})
 	server := http.Server{
 		Addr: s.addr,

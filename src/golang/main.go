@@ -8,6 +8,18 @@ import (
 
 func main() {
 
+	area := Circle{
+		radius: 10,
+	}
+
+	area.radius = 10000
+
+	area1 := Circle{
+		radius: 10,
+	}
+
+	fmt.Println("Area of the circle is ", area.Area(), area1.Area(), area.CalculateArea())
+
 	user := User{
 		Name:        "John",
 		Age:         30,
