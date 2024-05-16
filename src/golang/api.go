@@ -136,6 +136,16 @@ func (s *APIServer) Run() error {
 		Handler: AuthMiddleWare(RequestLoggerMiddleware((router))),
 	}
 
+	// working with various types of incoming method like pathValue,...
+
+	router.HandleFunc("GET /user", func(w http.ResponseWriter, r *http.Request) {
+		// page,perPage,limit
+		page := r.URL.Query().Get("page")
+		perPage := r.URL.Query().Get("perPage")
+		limit := r.URL.Query().Get("limit")
+
+		fmt.Println("page ,perPage,limit", page, perPage, limit)
+	})
 	log.Println("server running on port 8080")
 	return server.ListenAndServe()
 

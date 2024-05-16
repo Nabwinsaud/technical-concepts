@@ -19,3 +19,33 @@ VALUES (
         21,
         ARRAY['admin', 'read-only']
     )
+    -- teams
+
+CREATE TABLE IF NOT EXISTS posts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+
+CREATE TABLE IF NOT EXISTS channel (
+    id SERIAL PRIMARY key,
+    channel_name TEXT,
+    post_id int,
+    Foreign Key (post_id) REFERENCES posts (id)
+)
+
+INSERT INTO
+    posts (name)
+VALUES (
+        'Marketing is the ultimate iceberg'
+    )
+
+SELECT *
+FROM posts po
+    join channel c on po.id = c.post_id
+order by created_at ASC
+
+INSERT INTO
+    channel (channel_name, post_id)
+VALUES ('Marketing', 2)
