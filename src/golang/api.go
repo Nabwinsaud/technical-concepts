@@ -167,6 +167,38 @@ func (s *APIServer) Run() error {
 		limit := r.URL.Query().Get("limit")
 
 		fmt.Println("page ,perPage,limit", page, perPage, limit)
+
+		rows, err := s.db.Query("SELECT name,age,roles FROM users")
+
+		var users []User
+
+		defer rows.Close()
+
+		var usr User
+
+		for rows.Next() {
+			if err := rows.Scan(&usr.Name, &usr.Age, pq.Array(&usr.Permissions)); err != nil {
+				fmt.Println("errors scanning the data ", err)
+				http.Error(w, "Error reading the data from databases", http.StatusInternalServerError)
+				return
+			}
+
+			users = append(users, usr)
+		}
+
+		if err != nil {
+			fmt.Println("error while getting user ", err)
+			http.Error(w, "Error while fetching from db", http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "applications/json")
+
+		if err = json.NewEncoder(w).Encode(users); err != nil {
+			fmt.Println("error parsing the json ", err)
+			http.Error(w, "error parsing the json", http.StatusBadRequest)
+		}
+
+		fmt.Println("user details  is", users)
+		// w.Write)
 	})
 	log.Println("server running on port 8080")
 	return server.ListenAndServe()
@@ -194,13 +226,13 @@ func AuthMiddleWare(next http.Handler) http.Handler {
 		}
 		err := VerifyToken(tokenParts[1])
 		if err != nil {
-			http.Error(w, "Invalid token", http.StatusBadRequest)
+			http.Error(w, "Invalid token or jwr malformed", http.StatusBadRequest)
 			return
 		}
-		if token != `Bearer ` {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+		// if token != `Bearer ` {
+		// 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		// 	return
+		// }
 		log.Printf("auth middleware is called ....")
 		next.ServeHTTP(w, r)
 	})
