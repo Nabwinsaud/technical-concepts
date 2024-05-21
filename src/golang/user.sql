@@ -49,3 +49,5 @@ order by created_at ASC
 INSERT INTO
     channel (channel_name, post_id)
 VALUES ('Marketing', 2)
+
+ALTER TABLE users ADD CONSTRAINT unique_name UNIQUE (name);

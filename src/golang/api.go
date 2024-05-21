@@ -35,6 +35,28 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 func (s *APIServer) Run() error {
 	router := http.NewServeMux()
 
+	router.HandleFunc("POST /user/auth", func(w http.ResponseWriter, r *http.Request) {
+		var userData User
+
+		body := json.NewDecoder(r.Body)
+
+		if err := body.Decode(&userData); err != nil {
+			fmt.Println("error while parsing the data")
+			http.Error(w, "Error while reading the data ", http.StatusBadRequest)
+		}
+
+		accessToken, err := CreateToken(userData.Name)
+
+		if err != nil {
+			fmt.Println("Invalid token")
+			http.Error(w, "invalid token", http.StatusBadRequest)
+			return
+		}
+
+		w.Write([]byte(accessToken))
+
+	})
+
 	router.HandleFunc("GET /user/{userId}", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("post user data is", r.Body)
 		userId := r.PathValue("userId")
@@ -164,7 +186,18 @@ func AuthMiddleWare(next http.Handler) http.Handler {
 
 		token := r.Header.Get("Authorization")
 
-		if token != "Bearer token" {
+		tokenParts := strings.Split(token, " ")
+
+		fmt.Println("the access token is ", tokenParts)
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			http.Error(w, "invalid authorization", http.StatusUnauthorized)
+		}
+		err := VerifyToken(tokenParts[1])
+		if err != nil {
+			http.Error(w, "Invalid token", http.StatusBadRequest)
+			return
+		}
+		if token != `Bearer ` {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

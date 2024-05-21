@@ -18,6 +18,8 @@ func main() {
 		radius: 10,
 	}
 
+	// arr := Array_stuffs()
+	// fmt.Println("Array stuffs is ")
 	fmt.Println("Area of the circle is ", area.Area(), area1.Area(), area.CalculateArea())
 
 	user := User{
