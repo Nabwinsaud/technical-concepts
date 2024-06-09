@@ -39,7 +39,7 @@ func main() {
 	}
 	fmt.Println("the struct data is ", person, user)
 
-	db, err := InitializeDD("localhost", "5432", "postgres", "nabin", "godb")
+	db, err := InitializeDB("localhost", "5432", "postgres", "nabin", "godb")
 
 	if err != nil {
 		log.Fatal(err)

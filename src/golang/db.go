@@ -8,7 +8,7 @@ import (
 
 // var db *sql.DB
 
-func InitializeDD(host, port, username, password, database string) (*sql.DB, error) {
+func InitializeDB(host, port, username, password, database string) (*sql.DB, error) {
 	connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, username, password, database)
 	db, err := sql.Open("postgres", connectionString)
 
