@@ -3,7 +3,6 @@ import { createServer } from "http";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { Server } from "socket.io";
-import { setSyntheticLeadingComments } from "typescript";
 
 const app = express();
 const server = createServer(app);
@@ -30,6 +29,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log("Server running at http://localhost:3000");
+server.listen(3002, () => {
+  console.log("server running at http://localhost:300");
 });
