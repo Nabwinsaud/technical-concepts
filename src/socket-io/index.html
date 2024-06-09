@@ -3,27 +3,53 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>socket io</title>
+    <title>Socket.io Chat</title>
   </head>
   <body>
-    <script
-      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
-      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
-      crossorigin="anonymous"
-    ></script>
+    <h1>Socket.io Chat</h1>
+    <p>Just HTML, no need for SSR</p>
 
-    <h1>socket io chat ...</h1>
-    <p>its just html not need ssr</p>
+    <form id="input-form">
+      <input
+        type="text"
+        id="message"
+        name="message"
+        placeholder="Enter message"
+      />
+      <br /><br />
+      <input type="submit" value="Send" />
+    </form>
+    <ul id="messages"></ul>
 
-    <script type="module">
-      import { io as Io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
-      // get intellisense from socket io ?
-      /**
-         * @type {SocketIOClient.Socket} - socket
-         
-      */
-      const socket = Io("http://localhost:3000");
-      console.log("status of io", socket);
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io("http://localhost:3000");
+
+      const form = document.getElementById("input-form");
+      const input = document.getElementById("message");
+      const messages = document.getElementById("messages");
+
+      const messagesNames = {
+        chatMessage: "chatMessage",
+      };
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (input.value) {
+          console.log("Sending message:", input.value);
+          socket.emit(messagesNames.chatMessage, input.value);
+          const item = document.createElement("li");
+          item.textContent = `You: ${input.value}`;
+          messages.appendChild(item);
+          input.value = "";
+        }
+      });
+
+      socket.on("chatMessage", function (msg) {
+        const item = document.createElement("li");
+        item.textContent = `Other: ${msg}`;
+        messages.appendChild(item);
+        console.log("Message received:", msg);
+      });
     </script>
   </body>
 </html>
