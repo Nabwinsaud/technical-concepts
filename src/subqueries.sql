@@ -51,3 +51,72 @@ EXECUTE FUNCTION log_customers_changes ();
 CREATE VIEW customer_names AS SELECT name, id, age from customers;
 
 SELECT * FROM customers where created_at > NOW() - INTERVAL '1 sec';
+
+-- some funky concepts
+
+-- let take about concat,collease,cast etc
+
+SELECT
+    LTRIM(' Left Trim') as LeftTrim,
+    RTRIM('Right trim  ') as RightTrim,
+    TRIM('  Both trim ') as AllTrim;
+
+SELECT UPPER('rust') as rustCase, LOWER('RUST') as rustLowerCase;
+
+SELECT LENGTH('rust') as lengthOfRust;
+
+SELECT SUBSTRING('helllo world', 1, 5) as substringHello;
+
+SELECT COALESCE(
+        NULL, NULL, NULL, 'i gotcha covered man'
+    ) as collease
+
+SELECT CONCAT(
+        'Hello', '-', COALESCE(
+            NULL, 'no description for strangers'
+        )
+    ) as description;
+
+CREATE TABLE sample_orders (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    description TEXT,
+    price DECIMAL(10, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO
+    sample_orders (name, description, price)
+VALUES (
+        'Item 1',
+        'Description 1',
+        19.99
+    ),
+    ('Item 2', NULL, 29.99),
+    (
+        'Item 3',
+        'Description 3',
+        NULL
+    );
+
+SELECT * from sample_orders;
+
+SELECT price, CONCAT(
+        name, ' ', COALESCE(
+            description, 'No description available'
+        )
+    ) as product_details
+from sample_orders;
+
+SELECT
+    name,
+    CASE
+        WHEN price IS NULL THEN 'price does not exists'
+        -- WHEN price is not null then 'Price is :' || CAST(price as VARCHAR)
+        WHEN price is not null then CONCAT(
+            'price is :',
+            cast(price as VARCHAR)
+        )
+        ELSE 'no need to check this still fine '
+    END as price_status
+from sample_orders;
